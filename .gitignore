@@ -2,3 +2,5 @@ target/
 *.log
 .DS_Store
 .github/workflows/
+frontend/node_modules/
+frontend/dist/

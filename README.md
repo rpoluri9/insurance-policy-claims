@@ -1,12 +1,25 @@
 # Insurance Policy and Claims Management System
 
-A Spring Boot backend for managing insurance customers, policies, premiums,
-and claims — built as a personal portfolio project by Ramesh Poluri.
+A Spring Boot backend with a React frontend for managing insurance
+customers, policies, premiums, and claims — built as a personal portfolio
+project by Ramesh Poluri.
 
 **Honesty note:** the insurer, the customers, and all data in this project
 are fictional demo content created for this project. It makes no claim about
 any employer, and nothing here runs on a real cloud account or production
 system.
+
+## Stack
+
+- **Frontend:** React + Vite (in `frontend/`) — customers, policies, premium
+  quotes, and claims pages that call the API with HTTP Basic auth.
+- **Backend:** Java 17, Spring Boot 3.2, Spring Data JPA, Spring Security
+  (HTTP Basic), Bean Validation.
+- **Database:** MySQL 8 at runtime (via docker-compose, or a local MySQL
+  server). The automated test suite runs on H2 (in-memory) so tests need no
+  MySQL server — see "Tests" below.
+- **Testing:** JUnit 5 + Mockito unit/service tests, MockMvc integration
+  tests, Postman collection.
 
 ## What it does
 
@@ -28,11 +41,15 @@ system.
   through REGISTERED → UNDER_REVIEW → APPROVED → SETTLED, or REJECTED from
   REGISTERED / UNDER_REVIEW. Claims must fall inside the policy period and
   cannot exceed the coverage still unused on the policy.
-- **Persistence** — Hibernate / Spring Data JPA on an H2 database.
+- **Persistence** — Hibernate / Spring Data JPA on MySQL 8 at runtime.
 - **Events** — every policy/claim creation and status change publishes a
   domain event through a publisher interface (local by default; see below).
 - **Security** — HTTP Basic auth protects every `/api/**` endpoint with a
   local demo user (see below). No OAuth provider, no real credentials.
+- **Frontend** — React pages for customers (create/list), policies
+  (create/list, premium quote, status changes), and claims (register/list,
+  status changes, settlement). CORS is enabled for the Vite dev server
+  (`http://localhost:5173`).
 - **Tests** — JUnit 5 + Mockito unit/service tests and MockMvc integration
   tests covering the full customer → policy → claim → settle flow.
 
@@ -91,7 +108,8 @@ Base URL: `http://localhost:8080` (all endpoints require HTTP Basic auth).
 
 Errors use one clean body: `{timestamp, status, error, message, path}`.
 A Postman collection covering every endpoint is in
-`postman/insurance-claims.postman_collection.json`.
+`postman/insurance-claims.postman_collection.json` (unchanged by the
+MySQL/React refactor — the API itself did not change).
 
 ## Security (demo only)
 
@@ -102,7 +120,9 @@ HTTP Basic auth, single in-memory user from `application.properties`:
 
 Change them in `application.properties` for your own runs. This is a demo
 setup, not production security: there is no OAuth provider and no per-user
-authorization. Unauthenticated requests get `401`.
+authorization. Unauthenticated requests get `401`. The React frontend sends
+the same credentials as an `Authorization` header and keeps them only in the
+browser tab's `sessionStorage`.
 
 ## Events and messaging
 
@@ -120,13 +140,48 @@ configure an endpoint yourself.
 
 ## Run it
 
+### Full stack with docker-compose (recommended)
+
 ```bash
-cd insurance-claims-service   # (project root)
+mvn -o package -DskipTests   # build the jar first
+docker compose up --build    # starts MySQL 8 + the backend on :8080
+cd frontend
+npm install
+npm run dev                  # React UI on http://localhost:5173
+```
+
+docker-compose creates the MySQL database `insurancedb` with user
+`insurance` / `insurance123` (demo values, change them for your own runs)
+and wires the backend to it. Data persists in the `mysql-data` volume.
+
+### Backend only, against a local MySQL server
+
+```bash
+# Create the database and user first (demo values):
+#   CREATE DATABASE insurancedb;
+#   CREATE USER 'insurance'@'localhost' IDENTIFIED BY 'insurance123';
+#   GRANT ALL PRIVILEGES ON insurancedb.* TO 'insurance'@'localhost';
 mvn spring-boot:run
 ```
 
+Override the connection with environment variables if your MySQL differs:
+`MYSQL_URL`, `MYSQL_USER`, `MYSQL_PASSWORD` (see
+`src/main/resources/application.properties`).
+
 In VS Code: open the project folder, run the
 `InsuranceClaimsApplication` class with the Java extension's Run button.
+
+### Frontend only
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173 (expects the API on :8080)
+```
+
+Override the API base URL with `VITE_API_URL` if the backend runs
+elsewhere. Sign in with the demo user above. `npm run build` produces a
+static build in `frontend/dist/` (`npm run preview` serves it on :4173).
 
 Try it (replace `<id>` values from earlier responses):
 
@@ -157,18 +212,15 @@ curl -u demo:demo123 -X PUT localhost:8080/api/claims/1/status \
 curl -u demo:demo123 -X POST localhost:8080/api/claims/1/settle
 ```
 
-## Docker
-
-```bash
-mvn -o package -DskipTests   # build the jar first
-docker compose up --build
-```
-
 ## Tests
 
 ```bash
 mvn test
 ```
+
+The test suite runs on H2 (in-memory) via
+`src/test/resources/application.properties`, so no MySQL server is needed
+to run the tests. Runtime (docker-compose or `spring-boot:run`) uses MySQL.
 
 ## Project layout
 
@@ -180,7 +232,8 @@ src/main/java/com/insurance/claims/
   repository/   Spring Data JPA repositories
   events/       DomainEvent, EventPublisher interface, local + HTTP publishers
   exception/    Custom exceptions + centralized @RestControllerAdvice handler
-  security/     HTTP Basic auth configuration (demo user)
+  security/     HTTP Basic auth configuration (demo user) + CORS for the frontend
+frontend/       React + Vite UI (customers, policies, claims pages)
 docs/           Architecture, policy/claim lifecycle, event flow diagrams
 postman/        Postman collection for all endpoints
 .github/        CI workflow (Maven tests)
@@ -188,6 +241,6 @@ postman/        Postman collection for all endpoints
 
 ## Diagrams
 
-- `docs/architecture.png` — layers and components
+- `docs/architecture.png` — React frontend, Spring Boot layers, MySQL
 - `docs/policy-claim-lifecycle.png` — policy and claim state machines
 - `docs/event-flow.png` — how domain events flow to publishers

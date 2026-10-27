@@ -30,15 +30,15 @@ def new_fig():
 
 
 # 1. Architecture — vertical chain: client → security → controllers →
-# services → repositories → H2; services publish events via the interface.
+# services → repositories → MySQL; services publish events via the interface.
 fig, ax = new_fig()
 ax.set_title("Insurance Claims System — Architecture", fontsize=13, weight="bold", pad=12)
-box(ax, 0.3, 4.9, 2.4, 0.8, "Client / Postman\n(Basic auth demo/demo123)")
-box(ax, 3.8, 4.9, 2.4, 0.8, "Spring Security\nHTTP Basic, in-memory user")
+box(ax, 0.3, 4.9, 2.4, 0.8, "React frontend (Vite)\n/ Postman\n(Basic auth demo/demo123)")
+box(ax, 3.8, 4.9, 2.4, 0.8, "Spring Security\nHTTP Basic, in-memory user\n+ CORS for :5173")
 box(ax, 7.3, 4.9, 2.4, 0.8, "Controllers\nCustomers · Policies · Claims")
 box(ax, 7.3, 3.6, 2.4, 0.8, "Services\nCustomer · Policy · Claim\nPremiumCalculator")
 box(ax, 7.3, 2.3, 2.4, 0.8, "Repositories\nSpring Data JPA")
-box(ax, 7.3, 1.0, 2.4, 0.8, "H2 database\n(in-memory)", color="#dcfce7")
+box(ax, 7.3, 1.0, 2.4, 0.8, "MySQL 8 database\n(docker-compose)", color="#dcfce7")
 box(ax, 3.8, 3.6, 2.4, 0.8, "EventPublisher\ninterface")
 box(ax, 3.8, 2.3, 2.4, 0.8, "Local publisher\n(log + in-memory)\n— default", color="#dcfce7")
 box(ax, 3.8, 1.0, 2.4, 0.8, "HTTP publisher\n(POST JSON, opt-in)", color="#fef9c3")

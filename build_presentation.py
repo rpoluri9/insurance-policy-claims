@@ -29,9 +29,9 @@ def add_slide(title, bullets):
 
 
 add_slide("Insurance Policy and Claims Management System", [
-    "A Spring Boot backend for insurance customers, policies, premiums, and claims",
+    "A Spring Boot backend + React frontend for insurance customers, policies, premiums, and claims",
     "Portfolio project by Ramesh Poluri — fictional demo data, no employer claims",
-    "Java 17 · Spring Boot 3.2 · Spring Data JPA · Spring Security · H2 · JUnit 5 + Mockito",
+    "Java 17 · Spring Boot 3.2 · Spring Data JPA · Spring Security · MySQL 8 · React + Vite · JUnit 5 + Mockito",
 ])
 add_slide("What the system does", [
     "Customer profiles with unique email addresses",
@@ -39,12 +39,14 @@ add_slide("What the system does", [
     "Premium calculation from policy attributes",
     "Full claim lifecycle: registered → review → approved → settled",
     "Event-driven notifications on every policy and claim change",
+    "React web UI for customers, policies, quotes, and claims",
 ])
 add_slide("Architecture", [
-    "Controllers → Services → Repositories → H2 database",
+    "React frontend (Vite) → Spring Boot controllers → services → repositories → MySQL 8",
     "Centralized exception handling: one clean error body everywhere",
     "EventPublisher interface: local publisher by default, HTTP publisher opt-in",
-    "Spring Security: HTTP Basic auth on every API endpoint",
+    "Spring Security: HTTP Basic auth on every API endpoint, CORS enabled for the frontend dev server",
+    "Tests run on H2 (in-memory); runtime uses MySQL via docker-compose",
 ])
 add_slide("Domain model", [
     "Customer: name, email, phone, date of birth, address",
@@ -85,8 +87,9 @@ add_slide("Security and testing", [
     "MockMvc integration tests: full customer → policy → claim → settle flow",
 ])
 add_slide("Run it and what's next", [
-    "Run: mvn spring-boot:run — then try the Postman collection",
-    "Docker: docker compose up --build · CI: GitHub Actions runs the test suite",
+    "Run: docker compose up --build (MySQL + backend) and cd frontend && npm install && npm run dev",
+    "Or backend only: mvn spring-boot:run with a local MySQL — then try the Postman collection",
+    "CI: GitHub Actions runs the test suite (tests use H2, no MySQL server needed)",
     "GitHub: github.com/rpoluri9/insurance-policy-claims",
     "Honest scope: local-first demo — real messaging and identity providers are opt-in configuration",
 ])
